@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -36,15 +37,50 @@ class _CartaScreenState extends State<CartaScreen> {
     getCurrentLocation();
   }
 
+  Future<bool> handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      log("Location services are disabled.");
+      return false;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        log("Location permissions are denied");
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      log(
+        "Location permissions are permanently denied, we cannot request permissions.",
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition();
+    final hasPermission = await handleLocationPermission();
+    if (!hasPermission) {
+      log("location permission yo‘q");
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
+    );
 
     currentPosition = LatLng(position.latitude, position.longitude);
     selectedPosition = currentPosition;
 
-    if (selectedPosition != null) {
-      manzlOlish(selectedPosition!.latitude, selectedPosition!.longitude);
-    }
+    manzlOlish(position.latitude, position.longitude);
     setState(() {});
   }
 
