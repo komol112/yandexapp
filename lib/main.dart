@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yandex/core/injection/di.dart';
-import 'package:yandex/presentation/blocs/map_bloc.dart';
+import 'package:yandex/presentation/blocs/reoute_bloc/map_bloc.dart';
+import 'package:yandex/presentation/blocs/search_bloc/search_place_bloc.dart';
 import 'package:yandex/presentation/screens/carta_screen.dart';
 
 void main(List<String> args) {
@@ -9,7 +10,10 @@ void main(List<String> args) {
   init();
   runApp(
     MultiBlocProvider(
-      providers: [BlocProvider(create: (context) => sl<MapBloc>())],
+      providers: [
+        BlocProvider(create: (context) => sl<MapBloc>()),
+        BlocProvider(create: (context) => sl<SearchPlaceBloc>()),
+      ],
       child: MyApp(),
     ),
   );

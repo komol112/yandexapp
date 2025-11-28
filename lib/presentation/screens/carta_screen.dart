@@ -9,9 +9,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:yandex/presentation/widgets/custom_taxi_column.dart';
 import 'package:yandex/presentation/widgets/custom_taxi_row.dart';
 import 'package:yandex/presentation/widgets/custom_taxi_column_and_row.dart';
-import 'package:yandex/presentation/blocs/map_bloc.dart';
-import 'package:yandex/presentation/blocs/map_event.dart';
-import 'package:yandex/presentation/blocs/map_state.dart';
+import 'package:yandex/presentation/blocs/reoute_bloc/map_bloc.dart';
+import 'package:yandex/presentation/blocs/reoute_bloc/map_event.dart';
+import 'package:yandex/presentation/blocs/reoute_bloc/map_state.dart';
 
 class CartaScreen extends StatefulWidget {
   const CartaScreen({super.key});
@@ -34,35 +34,30 @@ class _CartaScreenState extends State<CartaScreen> {
   @override
   void initState() {
     super.initState();
-    getCurrentLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getCurrentLocation();
+    });
   }
 
   Future<bool> handleLocationPermission() async {
     bool serviceEnabled;
     LocationPermission permission;
-
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      log("Location services are disabled.");
+      await Geolocator.openLocationSettings();
       return false;
     }
-
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        log("Location permissions are denied");
         return false;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      log(
-        "Location permissions are permanently denied, we cannot request permissions.",
-      );
       return false;
     }
-
     return true;
   }
 
@@ -120,10 +115,15 @@ class _CartaScreenState extends State<CartaScreen> {
   @override
   Widget build(BuildContext context) {
     if (currentPosition == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.blueAccent),
+        ),
+      );
     }
-
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           GoogleMap(
@@ -237,6 +237,8 @@ class _CartaScreenState extends State<CartaScreen> {
                     isScrolling
                         ? CustomTaxiRow()
                         : CustomTAxiColumnAndRow(
+                            mapController: mapController,
+                            currentPosition: currentPosition!,
                             currentAddress: currentAddress,
                           ),
                   ],
